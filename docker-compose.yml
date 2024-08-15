@@ -67,8 +67,8 @@ services:
     command: -vv /etc/mailrise.conf
     volumes:
       - ./data/mailrise/mailrise.conf:/etc/mailrise.conf:ro
-      - ./data/mailrise/certs/certificate.crt:/etc/certificate.pem
-      - ./data/mailrise/certs/privatekey.key:/etc/privatekey.pem
+      - ./data/mailrise/certs/certificate.pem:/etc/certificate.pem
+      - ./data/mailrise/certs/privatekey.pem:/etc/privatekey.pem
     networks:
         - reverse_proxy
     # ports:
