@@ -26,7 +26,7 @@ services:
         max-size: '1000m'
     restart: unless-stopped
     env_file:
-      - .env
+      - ./data/affine/.env
     networks:
         - reverse_proxy
 
@@ -56,7 +56,7 @@ services:
       timeout: 5s
       retries: 5
     env_file:
-      - .env
+      - ./data/affine/.env
     networks:
         - reverse_proxy
 
