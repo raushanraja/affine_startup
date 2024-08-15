@@ -1,0 +1,76 @@
+networks:
+  reverse_proxy:
+    external: true
+
+
+services:
+  affine:
+    image: ghcr.io/toeverything/affine-graphql:stable
+    container_name: affine_selfhosted
+    command:
+      ['sh', '-c', 'node ./scripts/self-host-predeploy && node ./dist/index.js']
+    # ports:
+    #   - '3010:3010'
+    #   - '5555:5555'
+    depends_on:
+      notesredis:
+        condition: service_healthy
+      notespostgres:
+        condition: service_healthy
+    volumes:
+      - ./data/affine/self-host/config:/root/.affine/config
+      - ./data/affine/self-host/storage:/root/.affine/storage
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '1000m'
+    restart: unless-stopped
+    env_file:
+      - .env
+    networks:
+        - reverse_proxy
+
+  notesredis:
+    image: redis
+    container_name: affine_redis
+    restart: unless-stopped
+    volumes:
+      - ./data/affine/self-host/redis:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+        - reverse_proxy
+
+  notespostgres:
+    image: postgres
+    container_name: affine_postgres
+    restart: unless-stopped
+    volumes:
+      - ./data/affine/self-host/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U affine']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    env_file:
+      - .env
+    networks:
+        - reverse_proxy
+
+  mailrise:
+    build: ./mailrise/
+    container_name: mailrise
+    restart: unless-stopped
+    command: -vv /etc/mailrise.conf
+    volumes:
+      - ./data/mailrise/mailrise.conf:/etc/mailrise.conf:ro
+      - ./data/mailrise/certs/certificate.crt:/etc/certificate.pem
+      - ./data/mailrise/certs/privatekey.key:/etc/privatekey.pem
+    networks:
+        - reverse_proxy
+    # ports:
+    #   - '8025:8025'
+      # - '3345:3345'
